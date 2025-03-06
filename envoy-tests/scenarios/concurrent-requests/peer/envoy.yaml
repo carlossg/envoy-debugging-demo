@@ -1,0 +1,92 @@
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 443
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          http_filters:
+          - name: envoy.filters.http.local_ratelimit
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+              stat_prefix: http_local_rate_limiter
+              token_bucket:
+                max_tokens: 2000      # Higher than sidecar to ensure bottleneck is at sidecar
+                tokens_per_fill: 200
+                fill_interval: 1s
+              filter_enabled:
+                runtime_key: local_rate_limit_enabled
+                default_value:
+                  numerator: 100
+                  denominator: HUNDRED
+              filter_enforced:
+                runtime_key: local_rate_limit_enforced
+                default_value:
+                  numerator: 100
+                  denominator: HUNDRED
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains: ["*"]
+              routes:
+              - match:
+                  prefix: "/"
+                route:
+                  cluster: service_http
+                  timeout: 30s
+                  retry_policy:
+                    retry_on: connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes
+                    num_retries: 3
+                    retry_back_off:
+                      base_interval: 0.1s
+                      max_interval: 1s
+
+  clusters:
+  - name: service_http
+    connect_timeout: 5s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: service_http
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: service-http
+                port_value: 8080
+    health_checks:
+      - timeout: 1s
+        interval: 5s
+        unhealthy_threshold: 3
+        healthy_threshold: 1
+        http_health_check:
+          path: "/health"
+    circuit_breakers:
+      thresholds:
+        - priority: DEFAULT
+          max_connections: 2000        # Higher than sidecar
+          max_pending_requests: 2000
+          max_requests: 2000
+          max_retries: 3
+    outlier_detection:
+      consecutive_5xx: 5
+      base_ejection_time: 30s
+      max_ejection_percent: 50
+      enforcing_consecutive_5xx: 100
+
+admin:
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9901

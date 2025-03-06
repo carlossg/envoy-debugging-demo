@@ -1,0 +1,14 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'envoy_sidecar'
+    static_configs:
+      - targets: ['envoy_sidecar:9901']
+    metrics_path: /stats/prometheus
+
+  - job_name: 'envoy_peer'
+    static_configs:
+      - targets: ['envoy_peer:9901']
+    metrics_path: /stats/prometheus

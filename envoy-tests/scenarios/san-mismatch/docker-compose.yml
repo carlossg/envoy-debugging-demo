@@ -1,0 +1,32 @@
+name: san-mismatch
+services:
+  envoy_sidecar:
+    image: "${ENVOY_IMAGE:-envoyproxy/envoy:v1.31.5}"
+    command: --config-path /etc/envoy/envoy.yaml --reject-unknown-dynamic-fields --log-level warn --component-log-level http2:debug,connection:debug,main:warn
+    ports:
+      - "${SIDECAR_PORT:-3128}:3128"
+    volumes:
+      - ./certs/envoy_sidecar/:/etc/envoy/certs/
+      - ./sidecar/envoy.yaml:/etc/envoy/envoy.yaml
+      - ./sidecar/log:/var/log
+
+  envoy_peer:
+    image: "${ENVOY_IMAGE:-envoyproxy/envoy:v1.31.5}"
+    command: --config-path /etc/envoy/envoy.yaml --reject-unknown-dynamic-fields --log-level warn --component-log-level http2:debug,connection:debug,main:warn
+    ports:
+      - "${PEER_PORT:-9443}:9443"
+    volumes:
+      - ./certs/envoy_peer/:/etc/envoy/certs/
+      - ./peer/envoy.yaml:/etc/envoy/envoy.yaml
+      - ./peer/log:/var/log
+
+  service-http:
+    image: mendhak/http-https-echo:28
+    environment:
+      - PORT=8080
+
+  curl:
+    image: curlimages/curl:7.84.0
+    command: tail -f /dev/null
+    volumes:
+      - ./certs:/etc/envoy/certs
