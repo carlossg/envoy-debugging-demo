@@ -26,13 +26,13 @@ services:
     environment:
       - PORT=8080
 
-  # jmeter:
-  #   build:
-  #     context: ./jmeter
-  #   volumes:
-  #     - ./jmeter/test-plan.jmx:/test-plan.jmx
-  #     - ./results:/results
-  #   command: -n -t /test-plan.jmx -l /results/custom-results.jtl -e -o /results/dashboard
+  jmeter:
+    build:
+      context: ./jmeter
+    volumes:
+      - ./jmeter/test-plan.jmx:/test-plan.jmx
+      - ./results:/results
+    command: -n -t /test-plan.jmx -l /results/custom-results.jtl -e -o /results/dashboard
 
   grafana:
     image: grafana/grafana:latest
@@ -53,7 +53,7 @@ services:
 
   curl:
     image: curlimages/curl:7.84.0
-    entrypoint: bash
+    entrypoint: sh
     command: -c 'while true; do curl -sS http://envoy_sidecar:3128/; sleep 1; done'
     volumes:
       - ./certs:/etc/envoy/certs
