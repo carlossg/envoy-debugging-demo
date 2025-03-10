@@ -2,7 +2,7 @@ name: concurrent-requests
 services:
   envoy_sidecar:
     image: "${ENVOY_IMAGE:-envoyproxy/envoy:v1.31.5}"
-    command: --config-path /etc/envoy/envoy.yaml --reject-unknown-dynamic-fields --log-level warn --component-log-level connection:debug,http2:debug,main:warn
+    command: --config-path /etc/envoy/envoy.yaml --log-level info
     ports:
       - "${SIDECAR_PORT:-3128}:3128"
       - "${ADMIN_PORT:-9901}:9901"
@@ -13,7 +13,7 @@ services:
 
   envoy_peer:
     image: "${ENVOY_IMAGE:-envoyproxy/envoy:v1.31.5}"
-    command: --config-path /etc/envoy/envoy.yaml --reject-unknown-dynamic-fields --log-level warn --component-log-level connection:debug,http2:debug,main:warn
+    command: --config-path /etc/envoy/envoy.yaml --log-level info
     ports:
       - "${PEER_ADMIN_PORT:-9902}:9901"
     volumes:
@@ -26,13 +26,13 @@ services:
     environment:
       - PORT=8080
 
-  jmeter:
-    build: 
-      context: ./jmeter
-    volumes:
-      - ./jmeter/test-plan.jmx:/test-plan.jmx
-      - ./results:/results
-    command: -n -t /test-plan.jmx -l /results/custom-results.jtl -e -o /results/dashboard
+  # jmeter:
+  #   build:
+  #     context: ./jmeter
+  #   volumes:
+  #     - ./jmeter/test-plan.jmx:/test-plan.jmx
+  #     - ./results:/results
+  #   command: -n -t /test-plan.jmx -l /results/custom-results.jtl -e -o /results/dashboard
 
   grafana:
     image: grafana/grafana:latest
@@ -42,6 +42,7 @@ services:
       - ./grafana/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/dashboards/json:/etc/grafana/dashboards
+      - grafana-storage:/var/lib/grafana
 
   prometheus:
     image: prom/prometheus:latest
@@ -52,6 +53,10 @@ services:
 
   curl:
     image: curlimages/curl:7.84.0
-    command: tail -f /dev/null
+    entrypoint: bash
+    command: -c 'while true; do curl -sS http://envoy_sidecar:3128/; sleep 1; done'
     volumes:
       - ./certs:/etc/envoy/certs
+
+volumes:
+  grafana-storage: {}

@@ -2,7 +2,7 @@ name: key-mismatch
 services:
   envoy_sidecar:
     image: "${ENVOY_IMAGE:-envoyproxy/envoy:v1.31.5}"
-    command: --config-path /etc/envoy/envoy.yaml --reject-unknown-dynamic-fields --log-level warn --component-log-level connection:debug,http2:debug,main:warn
+    command: --config-path /etc/envoy/envoy.yaml --log-level info
     ports:
       - "${SIDECAR_PORT:-3128}:3128"
       - "${ADMIN_PORT:-9901}:9901"
@@ -13,7 +13,7 @@ services:
 
   envoy_peer:
     image: "${ENVOY_IMAGE:-envoyproxy/envoy:v1.31.5}"
-    command: --config-path /etc/envoy/envoy.yaml --reject-unknown-dynamic-fields --log-level warn --component-log-level connection:debug,http2:debug,main:warn
+    command: --config-path /etc/envoy/envoy.yaml --log-level info
     ports:
       - "${PEER_ADMIN_PORT:-9902}:9901"
     volumes:
@@ -25,6 +25,30 @@ services:
     image: mendhak/http-https-echo:28
     environment:
       - PORT=8080
+
+  # jmeter:
+  #   build:
+  #     context: ./jmeter
+  #   volumes:
+  #     - ./jmeter/test-plan.jmx:/test-plan.jmx
+  #     - ./results:/results
+  #   command: -n -t /test-plan.jmx -l /results/custom-results.jtl -e -o /results/dashboard
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards/json:/etc/grafana/dashboards
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
 
   curl:
     image: curlimages/curl:7.84.0
