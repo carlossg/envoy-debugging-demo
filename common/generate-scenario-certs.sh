@@ -3,8 +3,13 @@
 # Function to display usage
 usage() {
     echo "Usage: $0 <scenario> <mode>"
-    echo "Scenarios: cert-expiration, invalid-signature, key-mismatch, san-mismatch"
+    echo "Scenarios: 1, 2, 3, 4, 5"
     echo "Modes: problem, correct"
+    echo "1 - cert-expiration"
+    echo "2 - invalid-signature"
+    echo "3 - key-mismatch"
+    echo "4 - san-mismatch"
+    echo "5 - concurrent-requests"
     exit 1
 }
 
@@ -18,10 +23,10 @@ MODE=$2
 
 # Validate scenario argument
 case $SCENARIO in
-    cert-expiration|invalid-signature|key-mismatch|san-mismatch|concurrent-requests)
+    1|2|3|4|5)
         ;;
     *)
-        echo "Invalid scenario. Must be one of: cert-expiration, invalid-signature, key-mismatch, san-mismatch, concurrent-requests"
+        echo "Invalid scenario. Must be one of: 1, 2, 3, 4, 5"
         exit 1
         ;;
 esac
@@ -123,7 +128,7 @@ EOF
     cp "$dir/ca.pem" "$dir/envoy_peer/"
 }
 
-# Function to generate certificates for cert-expiration scenario
+# Function to generate certificates for 1 scenario
 generate_expired_certs() {
     local dir=$1
     
@@ -159,7 +164,7 @@ generate_expired_certs() {
     cp "$dir/ca.pem" "$dir/envoy_peer/"
 }
 
-# Function to generate certificates for invalid-signature scenario
+# Function to generate certificates for 2 scenario
 generate_invalid_signature_certs() {
     local dir=$1
     
@@ -248,7 +253,7 @@ EOF
     cp "$dir/ca.pem" "$dir/envoy_peer/"
 }
 
-# Function to generate certificates for key-mismatch scenario
+# Function to generate certificates for 3 scenario
 generate_key_mismatch_certs() {
     local dir=$1
     
@@ -283,7 +288,7 @@ generate_key_mismatch_certs() {
     cp "$dir/ca.pem" "$dir/envoy_peer/"
 }
 
-# Function to generate certificates for san-mismatch scenario
+# Function to generate certificates for 4 scenario
 generate_san_mismatch_certs() {
     local dir=$1
     
@@ -349,19 +354,19 @@ case $MODE in
         ;;
     problem)
         case $SCENARIO in
-            cert-expiration)
+            1)
                 generate_expired_certs "certs"
                 ;;
-            invalid-signature)
+            2)
                 generate_invalid_signature_certs "certs"
                 ;;
-            key-mismatch)
+            3)
                 generate_key_mismatch_certs "certs"
                 ;;
-            san-mismatch)
+            4)
                 generate_san_mismatch_certs "certs"
                 ;;
-            concurrent-requests)
+            5)
                 generate_concurrent_requests_certs "certs"
                 ;;
         esac

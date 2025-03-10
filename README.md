@@ -19,3 +19,9 @@ Make initial request:
    docker compose down
    ```
 
+
+    echo "1 - cert-expiration"
+    echo "2 - invalid-signature"
+    echo "3 - key-mismatch"
+    echo "4 - san-mismatch"
+    echo "5 - concurrent-requests"

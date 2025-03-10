@@ -1,5 +1,5 @@
 docker compose up -d
-./generate-scenario-certs.sh invalid-signature problem
+./generate-scenario-certs.sh 2 problem
 docker-compose exec curl curl -v http://envoy_sidecar:3128
 docker compose logs envoy_sidecar |grep 'debug'
 
