@@ -52,10 +52,10 @@ static_resources:
     circuit_breakers:
       thresholds:
         - priority: DEFAULT
-          max_connections: 100
-          max_pending_requests: 100
-          max_requests: 200
-          max_retries: 3
+          max_connections: 10
+          max_pending_requests: 5
+          max_requests: 20
+          max_retries: 1
     load_assignment:
       cluster_name: service_envoy_peer
       endpoints:
