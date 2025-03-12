@@ -1,8 +1,7 @@
-FROM alpine:3.18
+FROM eclipse-temurin:11
 
 # Install OpenJDK and JMeter
-RUN apk add --no-cache openjdk11 wget \
-    && wget https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.6.3.tgz \
+RUN wget https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.6.3.tgz \
     && tar -xzf apache-jmeter-5.6.3.tgz \
     && rm apache-jmeter-5.6.3.tgz \
     && mv apache-jmeter-5.6.3 /opt/apache-jmeter
