@@ -23,6 +23,8 @@ services:
 
   service-http:
     image: mendhak/http-https-echo:28
+    entrypoint: sh
+    command: -c 'node ./index.js >/dev/null'
     environment:
       - PORT=8080
 
