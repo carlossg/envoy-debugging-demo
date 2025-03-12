@@ -12,24 +12,24 @@ static_resources:
           "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
           stat_prefix: ingress_http
           http_filters:
-          - name: envoy.filters.http.local_ratelimit
-            typed_config:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
-              stat_prefix: http_local_rate_limiter
-              token_bucket:
-                max_tokens: 2000      # Higher than sidecar to ensure bottleneck is at sidecar
-                tokens_per_fill: 200
-                fill_interval: 1s
-              filter_enabled:
-                runtime_key: local_rate_limit_enabled
-                default_value:
-                  numerator: 100
-                  denominator: HUNDRED
-              filter_enforced:
-                runtime_key: local_rate_limit_enforced
-                default_value:
-                  numerator: 100
-                  denominator: HUNDRED
+          # - name: envoy.filters.http.local_ratelimit
+          #   typed_config:
+          #     "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+          #     stat_prefix: http_local_rate_limiter
+          #     token_bucket:
+          #       max_tokens: 2000      # Higher than sidecar to ensure bottleneck is at sidecar
+          #       tokens_per_fill: 200
+          #       fill_interval: 1s
+          #     filter_enabled:
+          #       runtime_key: local_rate_limit_enabled
+          #       default_value:
+          #         numerator: 1
+          #         denominator: HUNDRED
+          #     filter_enforced:
+          #       runtime_key: local_rate_limit_enforced
+          #       default_value:
+          #         numerator: 1
+          #         denominator: HUNDRED
           - name: envoy.filters.http.router
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
@@ -75,10 +75,10 @@ static_resources:
     circuit_breakers:
       thresholds:
         - priority: DEFAULT
-          max_connections: 2000        # Higher than sidecar
-          max_pending_requests: 2000
-          max_requests: 2000
-          max_retries: 3
+          max_connections: 1        # Higher than sidecar
+          max_pending_requests: 1
+          max_requests: 1
+          max_retries: 1
     outlier_detection:
       consecutive_5xx: 5
       base_ejection_time: 30s
