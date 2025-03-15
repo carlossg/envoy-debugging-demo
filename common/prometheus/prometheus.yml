@@ -3,22 +3,22 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'envoy_sidecar'
+  - job_name: 'envoy_downstream'
     static_configs:
-      - targets: ['envoy_sidecar:9901']
+      - targets: ['envoy_downstream:9901']
     metrics_path: /stats/prometheus
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
       - target_label: job
-        replacement: envoy_sidecar
+        replacement: envoy_downstream
 
-  - job_name: 'envoy_peer'
+  - job_name: 'envoy_upstream'
     static_configs:
-      - targets: ['envoy_peer:9901']
+      - targets: ['envoy_upstream:9901']
     metrics_path: /stats/prometheus
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
       - target_label: job
-        replacement: envoy_peer
+        replacement: envoy_upstream

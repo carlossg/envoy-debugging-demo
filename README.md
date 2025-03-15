@@ -7,11 +7,11 @@
 ## Test Steps
 Make initial request:
    ```bash
-   docker compose exec curl curl http://envoy_sidecar:3128/
+   docker compose exec curl curl http://envoy_downstream:3128/
    ```
 ## Look for logs
    ```bash
-   docker compose logs envoy_sidecar | grep '\[debug\]'
+   docker compose logs envoy_downstream | grep '\[debug\]'
    ```
 
 ## Stop before going to next scenario

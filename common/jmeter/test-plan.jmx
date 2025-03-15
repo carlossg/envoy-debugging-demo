@@ -25,7 +25,7 @@
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">envoy_sidecar</stringProp>
+          <stringProp name="HTTPSampler.domain">envoy_downstream</stringProp>
           <stringProp name="HTTPSampler.port">3128</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/</stringProp>

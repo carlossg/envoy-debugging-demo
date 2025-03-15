@@ -41,8 +41,8 @@ docker-compose exec jmeter jmeter -n -t /test/test-plan.jmx -l /test/results/tes
 - Request status codes: `envoy_http_downstream_rq_xx`
 
 ####
-Key differences from the sidecar configuration:
-Higher rate limits (2000 vs 1000) to ensure the bottleneck is at the sidecar
+Key differences from the downstream configuration:
+Higher rate limits (2000 vs 1000) to ensure the bottleneck is at the downstream
 Added retry policy for upstream requests
 Added health checks for the backend service
 Added outlier detection for circuit breaking
@@ -72,7 +72,7 @@ Ejects hosts after 5 consecutive 5xx errors
 30-second base ejection time
 Maximum 50% of hosts can be ejected
 This configuration is designed to:
-Handle higher load than the sidecar
+Handle higher load than the downstream
 Provide better visibility into backend service health
 Implement graceful degradation under load
 Protect the backend service from overload

@@ -1,25 +1,25 @@
 name: invalid-signature
 services:
-  envoy_sidecar:
+  envoy_downstream:
     image: "${ENVOY_IMAGE:-envoyproxy/envoy:v1.31.5}"
     command: --config-path /etc/envoy/envoy.yaml --log-level info
     ports:
-      - "${SIDECAR_PORT:-3128}:3128"
+      - "${DOWNSTREAM_PORT:-3128}:3128"
       - "${ADMIN_PORT:-9901}:9901"
     volumes:
-      - ./certs/envoy_sidecar/:/etc/envoy/certs/
-      - ./sidecar/envoy.yaml:/etc/envoy/envoy.yaml
-      - ./sidecar/log:/var/log
+      - ./certs/envoy_downstream/:/etc/envoy/certs/
+      - ./downstream/envoy.yaml:/etc/envoy/envoy.yaml
+      - ./downstream/log:/var/log
 
-  envoy_peer:
+  envoy_upstream:
     image: "${ENVOY_IMAGE:-envoyproxy/envoy:v1.31.5}"
     command: --config-path /etc/envoy/envoy.yaml --log-level info
     ports:
-      - "${PEER_ADMIN_PORT:-9902}:9901"
+      - "${UPSTREAM_ADMIN_PORT:-9902}:9901"
     volumes:
-      - ./certs/envoy_peer/:/etc/envoy/certs/
-      - ./peer/envoy.yaml:/etc/envoy/envoy.yaml
-      - ./peer/log:/var/log
+      - ./certs/envoy_upstream/:/etc/envoy/certs/
+      - ./upstream/envoy.yaml:/etc/envoy/envoy.yaml
+      - ./upstream/log:/var/log
 
   service-http:
     image: mendhak/http-https-echo:28

@@ -42,8 +42,8 @@ case $MODE in
 esac
 
 # Create directories if they don't exist
-mkdir -p "../envoy-tests/scenarios/$SCENARIO/certs/envoy_sidecar"
-mkdir -p "../envoy-tests/scenarios/$SCENARIO/certs/envoy_peer"
+mkdir -p "../envoy-tests/scenarios/$SCENARIO/certs/envoy_downstream"
+mkdir -p "../envoy-tests/scenarios/$SCENARIO/certs/envoy_upstream"
 
 # Function to generate standard certificates (correct mode)
 generate_correct_certs() {
@@ -55,8 +55,8 @@ generate_correct_certs() {
         -out "$dir/ca.pem" \
         -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=Test CA"
 
-    # Create OpenSSL config for sidecar with SAN
-    cat > "$dir/envoy_sidecar/openssl.cnf" <<EOF
+    # Create OpenSSL config for downstream with SAN
+    cat > "$dir/envoy_downstream/openssl.cnf" <<EOF
 [req]
 default_bits = 2048
 prompt = no
@@ -69,28 +69,28 @@ C = US
 ST = California
 L = San Francisco
 O = Test
-CN = envoy_peer
+CN = envoy_upstream
 
 [req_ext]
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = envoy_peer
+DNS.1 = envoy_upstream
 EOF
 
-    # Generate sidecar certificate
-    openssl genpkey -algorithm RSA -out "$dir/envoy_sidecar/key.pem"
-    openssl req -new -key "$dir/envoy_sidecar/key.pem" \
-        -config "$dir/envoy_sidecar/openssl.cnf" \
-        -out "$dir/envoy_sidecar/cert.csr"
-    openssl x509 -req -in "$dir/envoy_sidecar/cert.csr" \
+    # Generate downstream certificate
+    openssl genpkey -algorithm RSA -out "$dir/envoy_downstream/key.pem"
+    openssl req -new -key "$dir/envoy_downstream/key.pem" \
+        -config "$dir/envoy_downstream/openssl.cnf" \
+        -out "$dir/envoy_downstream/cert.csr"
+    openssl x509 -req -in "$dir/envoy_downstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
-        -extfile "$dir/envoy_sidecar/openssl.cnf" \
+        -extfile "$dir/envoy_downstream/openssl.cnf" \
         -extensions req_ext \
-        -out "$dir/envoy_sidecar/cert.pem" -days 365
+        -out "$dir/envoy_downstream/cert.pem" -days 365
 
-    # Create OpenSSL config for peer with SAN
-    cat > "$dir/envoy_peer/openssl.cnf" <<EOF
+    # Create OpenSSL config for upstream with SAN
+    cat > "$dir/envoy_upstream/openssl.cnf" <<EOF
 [req]
 default_bits = 2048
 prompt = no
@@ -103,29 +103,29 @@ C = US
 ST = California
 L = San Francisco
 O = Test
-CN = envoy_peer
+CN = envoy_upstream
 
 [req_ext]
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = envoy_peer
+DNS.1 = envoy_upstream
 EOF
 
-    # Generate peer certificate
-    openssl genpkey -algorithm RSA -out "$dir/envoy_peer/key.pem"
-    openssl req -new -key "$dir/envoy_peer/key.pem" \
-        -config "$dir/envoy_peer/openssl.cnf" \
-        -out "$dir/envoy_peer/cert.csr"
-    openssl x509 -req -in "$dir/envoy_peer/cert.csr" \
+    # Generate upstream certificate
+    openssl genpkey -algorithm RSA -out "$dir/envoy_upstream/key.pem"
+    openssl req -new -key "$dir/envoy_upstream/key.pem" \
+        -config "$dir/envoy_upstream/openssl.cnf" \
+        -out "$dir/envoy_upstream/cert.csr"
+    openssl x509 -req -in "$dir/envoy_upstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
-        -extfile "$dir/envoy_peer/openssl.cnf" \
+        -extfile "$dir/envoy_upstream/openssl.cnf" \
         -extensions req_ext \
-        -out "$dir/envoy_peer/cert.pem" -days 365
+        -out "$dir/envoy_upstream/cert.pem" -days 365
 
     # Copy the trusted CA cert to both directories
-    cp "$dir/ca.pem" "$dir/envoy_sidecar/"
-    cp "$dir/ca.pem" "$dir/envoy_peer/"
+    cp "$dir/ca.pem" "$dir/envoy_downstream/"
+    cp "$dir/ca.pem" "$dir/envoy_upstream/"
 }
 
 # Function to generate certificates for 1 scenario
@@ -138,30 +138,30 @@ generate_expired_certs() {
         -out "$dir/ca.pem" \
         -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=Test CA"
 
-    # Generate expired sidecar certificate
-    openssl genpkey -algorithm RSA -out "$dir/envoy_sidecar/key.pem"
-    openssl req -new -key "$dir/envoy_sidecar/key.pem" \
-        -out "$dir/envoy_sidecar/cert.csr" \
-        -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=envoy_sidecar" \
+    # Generate expired downstream certificate
+    openssl genpkey -algorithm RSA -out "$dir/envoy_downstream/key.pem"
+    openssl req -new -key "$dir/envoy_downstream/key.pem" \
+        -out "$dir/envoy_downstream/cert.csr" \
+        -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=envoy_downstream" \
         -config "../../../common/openssl.cnf"
-    openssl x509 -req -in "$dir/envoy_sidecar/cert.csr" \
+    openssl x509 -req -in "$dir/envoy_downstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
-        -out "$dir/envoy_sidecar/cert.pem" -days 0 \
-        -extfile <(echo "subjectAltName=DNS:envoy_sidecar")
+        -out "$dir/envoy_downstream/cert.pem" -days 0 \
+        -extfile <(echo "subjectAltName=DNS:envoy_downstream")
 
-    # Generate valid peer certificate
-    openssl genpkey -algorithm RSA -out "$dir/envoy_peer/key.pem"
-    openssl req -new -key "$dir/envoy_peer/key.pem" \
-        -out "$dir/envoy_peer/cert.csr" \
-        -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=envoy_peer" \
+    # Generate valid upstream certificate
+    openssl genpkey -algorithm RSA -out "$dir/envoy_upstream/key.pem"
+    openssl req -new -key "$dir/envoy_upstream/key.pem" \
+        -out "$dir/envoy_upstream/cert.csr" \
+        -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=envoy_upstream" \
         -config "../../../common/openssl.cnf"
-    openssl x509 -req -in "$dir/envoy_peer/cert.csr" \
+    openssl x509 -req -in "$dir/envoy_upstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
-        -out "$dir/envoy_peer/cert.pem" -days 365 \
-        -extfile <(echo "subjectAltName=DNS:envoy_peer")
+        -out "$dir/envoy_upstream/cert.pem" -days 365 \
+        -extfile <(echo "subjectAltName=DNS:envoy_upstream")
 
-    cp "$dir/ca.pem" "$dir/envoy_sidecar/"
-    cp "$dir/ca.pem" "$dir/envoy_peer/"
+    cp "$dir/ca.pem" "$dir/envoy_downstream/"
+    cp "$dir/ca.pem" "$dir/envoy_upstream/"
 }
 
 # Function to generate certificates for 2 scenario
@@ -180,8 +180,8 @@ generate_invalid_signature_certs() {
         -out "$dir/different_ca.pem" \
         -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=Different CA"
 
-    # Create OpenSSL config for sidecar with SAN
-    cat > "$dir/envoy_sidecar/openssl.cnf" <<EOF
+    # Create OpenSSL config for downstream with SAN
+    cat > "$dir/envoy_downstream/openssl.cnf" <<EOF
 [req]
 default_bits = 2048
 prompt = no
@@ -194,28 +194,28 @@ C = US
 ST = California
 L = San Francisco
 O = Test
-CN = envoy_peer
+CN = envoy_upstream
 
 [req_ext]
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = envoy_peer
+DNS.1 = envoy_upstream
 EOF
 
-    # Generate sidecar certificate signed by different CA
-    openssl genpkey -algorithm RSA -out "$dir/envoy_sidecar/key.pem"
-    openssl req -new -key "$dir/envoy_sidecar/key.pem" \
-        -config "$dir/envoy_sidecar/openssl.cnf" \
-        -out "$dir/envoy_sidecar/cert.csr"
-    openssl x509 -req -in "$dir/envoy_sidecar/cert.csr" \
+    # Generate downstream certificate signed by different CA
+    openssl genpkey -algorithm RSA -out "$dir/envoy_downstream/key.pem"
+    openssl req -new -key "$dir/envoy_downstream/key.pem" \
+        -config "$dir/envoy_downstream/openssl.cnf" \
+        -out "$dir/envoy_downstream/cert.csr"
+    openssl x509 -req -in "$dir/envoy_downstream/cert.csr" \
         -CA "$dir/different_ca.pem" -CAkey "$dir/different_ca.key" -CAcreateserial \
-        -extfile "$dir/envoy_sidecar/openssl.cnf" \
+        -extfile "$dir/envoy_downstream/openssl.cnf" \
         -extensions req_ext \
-        -out "$dir/envoy_sidecar/cert.pem" -days 365
+        -out "$dir/envoy_downstream/cert.pem" -days 365
 
-    # Create OpenSSL config for peer with SAN
-    cat > "$dir/envoy_peer/openssl.cnf" <<EOF
+    # Create OpenSSL config for upstream with SAN
+    cat > "$dir/envoy_upstream/openssl.cnf" <<EOF
 [req]
 default_bits = 2048
 prompt = no
@@ -228,29 +228,29 @@ C = US
 ST = California
 L = San Francisco
 O = Test
-CN = envoy_peer
+CN = envoy_upstream
 
 [req_ext]
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = envoy_peer
+DNS.1 = envoy_upstream
 EOF
 
-    # Generate valid peer certificate
-    openssl genpkey -algorithm RSA -out "$dir/envoy_peer/key.pem"
-    openssl req -new -key "$dir/envoy_peer/key.pem" \
-        -config "$dir/envoy_peer/openssl.cnf" \
-        -out "$dir/envoy_peer/cert.csr"
-    openssl x509 -req -in "$dir/envoy_peer/cert.csr" \
+    # Generate valid upstream certificate
+    openssl genpkey -algorithm RSA -out "$dir/envoy_upstream/key.pem"
+    openssl req -new -key "$dir/envoy_upstream/key.pem" \
+        -config "$dir/envoy_upstream/openssl.cnf" \
+        -out "$dir/envoy_upstream/cert.csr"
+    openssl x509 -req -in "$dir/envoy_upstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
-        -extfile "$dir/envoy_peer/openssl.cnf" \
+        -extfile "$dir/envoy_upstream/openssl.cnf" \
         -extensions req_ext \
-        -out "$dir/envoy_peer/cert.pem" -days 365
+        -out "$dir/envoy_upstream/cert.pem" -days 365
 
     # Copy the trusted CA cert to both directories
-    cp "$dir/ca.pem" "$dir/envoy_sidecar/"
-    cp "$dir/ca.pem" "$dir/envoy_peer/"
+    cp "$dir/ca.pem" "$dir/envoy_downstream/"
+    cp "$dir/ca.pem" "$dir/envoy_upstream/"
 }
 
 # Function to generate certificates for 3 scenario
@@ -263,29 +263,29 @@ generate_key_mismatch_certs() {
         -out "$dir/ca.pem" \
         -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=Test CA"
 
-    # Generate sidecar certificate with mismatched key
-    openssl genpkey -algorithm RSA -out "$dir/envoy_sidecar/correct.key"
-    openssl req -new -key "$dir/envoy_sidecar/correct.key" \
-        -out "$dir/envoy_sidecar/cert.csr" \
-        -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=envoy_sidecar"
-    openssl x509 -req -in "$dir/envoy_sidecar/cert.csr" \
+    # Generate downstream certificate with mismatched key
+    openssl genpkey -algorithm RSA -out "$dir/envoy_downstream/correct.key"
+    openssl req -new -key "$dir/envoy_downstream/correct.key" \
+        -out "$dir/envoy_downstream/cert.csr" \
+        -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=envoy_downstream"
+    openssl x509 -req -in "$dir/envoy_downstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
-        -out "$dir/envoy_sidecar/cert.pem" -days 365
+        -out "$dir/envoy_downstream/cert.pem" -days 365
     
     # Generate different key (this causes the mismatch)
-    openssl genpkey -algorithm RSA -out "$dir/envoy_sidecar/key.pem"
+    openssl genpkey -algorithm RSA -out "$dir/envoy_downstream/key.pem"
 
-    # Generate valid peer certificate
-    openssl genpkey -algorithm RSA -out "$dir/envoy_peer/key.pem"
-    openssl req -new -key "$dir/envoy_peer/key.pem" \
-        -out "$dir/envoy_peer/cert.csr" \
-        -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=envoy_peer"
-    openssl x509 -req -in "$dir/envoy_peer/cert.csr" \
+    # Generate valid upstream certificate
+    openssl genpkey -algorithm RSA -out "$dir/envoy_upstream/key.pem"
+    openssl req -new -key "$dir/envoy_upstream/key.pem" \
+        -out "$dir/envoy_upstream/cert.csr" \
+        -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=envoy_upstream"
+    openssl x509 -req -in "$dir/envoy_upstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
-        -out "$dir/envoy_peer/cert.pem" -days 365
+        -out "$dir/envoy_upstream/cert.pem" -days 365
 
-    cp "$dir/ca.pem" "$dir/envoy_sidecar/"
-    cp "$dir/ca.pem" "$dir/envoy_peer/"
+    cp "$dir/ca.pem" "$dir/envoy_downstream/"
+    cp "$dir/ca.pem" "$dir/envoy_upstream/"
 }
 
 # Function to generate certificates for 4 scenario
@@ -298,8 +298,8 @@ generate_san_mismatch_certs() {
         -out "$dir/ca.pem" \
         -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=Test CA"
 
-    # Create OpenSSL config for sidecar with specific SAN
-    cat > "$dir/envoy_sidecar/openssl.cnf" <<EOF
+    # Create OpenSSL config for downstream with specific SAN
+    cat > "$dir/envoy_downstream/openssl.cnf" <<EOF
 [req]
 default_bits = 2048
 prompt = no
@@ -321,28 +321,28 @@ subjectAltName = @alt_names
 DNS.1 = test.example.com
 EOF
 
-    # Generate sidecar certificate with specific SAN
-    openssl genpkey -algorithm RSA -out "$dir/envoy_sidecar/key.pem"
-    openssl req -new -key "$dir/envoy_sidecar/key.pem" \
-        -config "$dir/envoy_sidecar/openssl.cnf" \
-        -out "$dir/envoy_sidecar/cert.csr"
-    openssl x509 -req -in "$dir/envoy_sidecar/cert.csr" \
+    # Generate downstream certificate with specific SAN
+    openssl genpkey -algorithm RSA -out "$dir/envoy_downstream/key.pem"
+    openssl req -new -key "$dir/envoy_downstream/key.pem" \
+        -config "$dir/envoy_downstream/openssl.cnf" \
+        -out "$dir/envoy_downstream/cert.csr"
+    openssl x509 -req -in "$dir/envoy_downstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
-        -extfile "$dir/envoy_sidecar/openssl.cnf" \
+        -extfile "$dir/envoy_downstream/openssl.cnf" \
         -extensions req_ext \
-        -out "$dir/envoy_sidecar/cert.pem" -days 365
+        -out "$dir/envoy_downstream/cert.pem" -days 365
 
-    # Generate peer certificate
-    openssl genpkey -algorithm RSA -out "$dir/envoy_peer/key.pem"
-    openssl req -new -key "$dir/envoy_peer/key.pem" \
-        -out "$dir/envoy_peer/cert.csr" \
-        -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=envoy_peer"
-    openssl x509 -req -in "$dir/envoy_peer/cert.csr" \
+    # Generate upstream certificate
+    openssl genpkey -algorithm RSA -out "$dir/envoy_upstream/key.pem"
+    openssl req -new -key "$dir/envoy_upstream/key.pem" \
+        -out "$dir/envoy_upstream/cert.csr" \
+        -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=envoy_upstream"
+    openssl x509 -req -in "$dir/envoy_upstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
-        -out "$dir/envoy_peer/cert.pem" -days 365
+        -out "$dir/envoy_upstream/cert.pem" -days 365
 
-    cp "$dir/ca.pem" "$dir/envoy_sidecar/"
-    cp "$dir/ca.pem" "$dir/envoy_peer/"
+    cp "$dir/ca.pem" "$dir/envoy_downstream/"
+    cp "$dir/ca.pem" "$dir/envoy_upstream/"
 }
 
 # Main execution
@@ -375,7 +375,7 @@ esac
 
 # Cleanup
 rm -f certs/*.srl certs/*.csr
-rm -f certs/envoy_sidecar/*.csr certs/envoy_sidecar/openssl.cnf
-rm -f certs/envoy_peer/*.csr
+rm -f certs/envoy_downstream/*.csr certs/envoy_downstream/openssl.cnf
+rm -f certs/envoy_upstream/*.csr
 
 echo "Certificate generation complete for $SCENARIO in $MODE mode"
