@@ -57,7 +57,7 @@ services:
   curl:
     image: curlimages/curl:7.84.0
     entrypoint: sh
-    command: -c 'while true; do curl -sS -m 1 http://envoy_downstream:3128/; sleep 1; done'
+    command: -c 'while true; do curl -sS -m 1 http://envoy_downstream:3128/; echo; sleep 1; done'
     volumes:
       - ./certs:/etc/envoy/certs
 

@@ -1,8 +1,8 @@
-name: cert-expiration
+name: envoy-debugging
 services:
   envoy_downstream:
     image: "${ENVOY_IMAGE:-envoyproxy/envoy:v1.31.5}"
-    command: --config-path /etc/envoy/envoy.yaml --log-level info
+    command: "--config-path /etc/envoy/envoy.yaml --log-level info"
     ports:
       - "${DOWNSTREAM_PORT:-3128}:3128"
       - "${ADMIN_PORT:-9901}:9901"
@@ -23,6 +23,8 @@ services:
 
   service-http:
     image: mendhak/http-https-echo:28
+    entrypoint: sh
+    command: -c 'node ./index.js >/dev/null'
     environment:
       - PORT=8080
 
@@ -32,7 +34,8 @@ services:
   #   volumes:
   #     - ./jmeter/test-plan.jmx:/test-plan.jmx
   #     - ./results:/results
-  #   command: -n -t /test-plan.jmx -l /results/custom-results.jtl -e -o /results/dashboard
+  #   entrypoint: sh
+  #   command: -c 'rm -rf /results/* && jmeter -n -t /test-plan.jmx -l /results/custom-results.jtl -e -o /results/dashboard'
 
   grafana:
     image: grafana/grafana:latest
@@ -42,6 +45,7 @@ services:
       - ./grafana/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/dashboards/json:/etc/grafana/dashboards
+      - grafana-storage:/var/lib/grafana
 
   prometheus:
     image: prom/prometheus:latest
@@ -52,6 +56,10 @@ services:
 
   curl:
     image: curlimages/curl:7.84.0
-    command: tail -f /dev/null
+    entrypoint: sh
+    command: -c 'while true; do curl -sS -m 1 http://envoy_downstream:3128/; echo; sleep 1; done'
     volumes:
       - ./certs:/etc/envoy/certs
+
+volumes:
+  grafana-storage: {}
