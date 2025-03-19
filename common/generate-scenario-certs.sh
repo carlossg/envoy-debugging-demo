@@ -69,13 +69,13 @@ C = US
 ST = California
 L = San Francisco
 O = Test
-CN = envoy_upstream
+CN = envoy-debugging-demo
 
 [req_ext]
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = envoy_upstream
+DNS.1 = envoy-debugging-demo
 EOF
 
     # Generate downstream certificate
@@ -103,13 +103,13 @@ C = US
 ST = California
 L = San Francisco
 O = Test
-CN = envoy_upstream
+CN = envoy-debugging-demo
 
 [req_ext]
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = envoy_upstream
+DNS.1 = envoy-debugging-demo
 EOF
 
     # Generate upstream certificate
@@ -194,13 +194,13 @@ C = US
 ST = California
 L = San Francisco
 O = Test
-CN = envoy_upstream
+CN = envoy-debugging-demo
 
 [req_ext]
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = envoy_upstream
+DNS.1 = envoy-debugging-demo
 EOF
 
     # Generate downstream certificate signed by different CA
@@ -228,13 +228,13 @@ C = US
 ST = California
 L = San Francisco
 O = Test
-CN = envoy_upstream
+CN = envoy-debugging-demo
 
 [req_ext]
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = envoy_upstream
+DNS.1 = envoy-debugging-demo
 EOF
 
     # Generate valid upstream certificate
