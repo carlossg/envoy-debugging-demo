@@ -367,7 +367,7 @@ case $MODE in
                 generate_san_mismatch_certs "certs"
                 ;;
             5)
-                generate_concurrent_requests_certs "certs"
+                generate_correct_certs "certs"
                 ;;
         esac
         ;;
