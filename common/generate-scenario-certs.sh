@@ -138,7 +138,7 @@ generate_expired_certs() {
         -out "$dir/ca.pem" \
         -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=Test CA"
 
-    # Generate expired downstream certificate
+    # Generate valid downstream certificate
     openssl genpkey -algorithm RSA -out "$dir/envoy_downstream/key.pem"
     openssl req -new -key "$dir/envoy_downstream/key.pem" \
         -out "$dir/envoy_downstream/cert.csr" \
@@ -146,10 +146,10 @@ generate_expired_certs() {
         -config "../../../common/openssl.cnf"
     openssl x509 -req -in "$dir/envoy_downstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
-        -out "$dir/envoy_downstream/cert.pem" -days 0 \
+        -out "$dir/envoy_downstream/cert.pem" -days 365 \
         -extfile <(echo "subjectAltName=DNS:envoy_downstream")
 
-    # Generate valid upstream certificate
+    # Generate expired upstream certificate
     openssl genpkey -algorithm RSA -out "$dir/envoy_upstream/key.pem"
     openssl req -new -key "$dir/envoy_upstream/key.pem" \
         -out "$dir/envoy_upstream/cert.csr" \
@@ -157,7 +157,7 @@ generate_expired_certs() {
         -config "../../../common/openssl.cnf"
     openssl x509 -req -in "$dir/envoy_upstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
-        -out "$dir/envoy_upstream/cert.pem" -days 365 \
+        -out "$dir/envoy_upstream/cert.pem" -days 0 \
         -extfile <(echo "subjectAltName=DNS:envoy_upstream")
 
     cp "$dir/ca.pem" "$dir/envoy_downstream/"
@@ -379,3 +379,9 @@ rm -f certs/envoy_downstream/*.csr certs/envoy_downstream/openssl.cnf
 rm -f certs/envoy_upstream/*.csr
 
 echo "Certificate generation complete for $SCENARIO in $MODE mode"
+echo
+echo "Certificates expiration dates:"
+echo -n "Downstream: "
+openssl x509 -in certs/envoy_downstream/cert.pem -noout -enddate
+echo -n "Upstream: "
+openssl x509 -in certs/envoy_upstream/cert.pem -noout -enddate
