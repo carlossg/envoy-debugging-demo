@@ -318,7 +318,7 @@ CN = test.example.com
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = test.example.com
+DNS.1 = envoy-debugging-demo
 EOF
 
     # Generate downstream certificate with specific SAN
@@ -332,13 +332,38 @@ EOF
         -extensions req_ext \
         -out "$dir/envoy_downstream/cert.pem" -days 365
 
-    # Generate upstream certificate
+    # Create OpenSSL config for upstream with different SAN
+    cat > "$dir/envoy_upstream/openssl.cnf" <<EOF
+[req]
+default_bits = 2048
+prompt = no
+default_md = sha256
+req_extensions = req_ext
+distinguished_name = dn
+
+[dn]
+C = US
+ST = California
+L = San Francisco
+O = Test
+CN = envoy_upstream
+
+[req_ext]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = test.example.com
+EOF
+
+    # Generate upstream certificate with different SAN
     openssl genpkey -algorithm RSA -out "$dir/envoy_upstream/key.pem"
     openssl req -new -key "$dir/envoy_upstream/key.pem" \
-        -out "$dir/envoy_upstream/cert.csr" \
-        -subj "/C=US/ST=California/L=San Francisco/O=Test/CN=envoy_upstream"
+        -config "$dir/envoy_upstream/openssl.cnf" \
+        -out "$dir/envoy_upstream/cert.csr"
     openssl x509 -req -in "$dir/envoy_upstream/cert.csr" \
         -CA "$dir/ca.pem" -CAkey "$dir/ca.key" -CAcreateserial \
+        -extfile "$dir/envoy_upstream/openssl.cnf" \
+        -extensions req_ext \
         -out "$dir/envoy_upstream/cert.pem" -days 365
 
     cp "$dir/ca.pem" "$dir/envoy_downstream/"

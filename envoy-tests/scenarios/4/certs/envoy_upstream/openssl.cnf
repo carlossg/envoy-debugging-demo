@@ -16,4 +16,4 @@ CN = envoy_upstream
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = envoy_upstream
+DNS.1 = test.example.com

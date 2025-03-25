@@ -61,7 +61,7 @@ static_resources:
             match_typed_subject_alt_names:
             - san_type: DNS
               matcher:
-                exact: "envoy_upstream"
+                exact: "envoy-debugging-demo"
             trust_chain_verification: VERIFY_TRUST_CHAIN
 admin:
   address:
